@@ -31,5 +31,21 @@ export function useApi() {
     post: (path, body) => request(path, { method: 'POST', body }),
     put: (path, body) => request(path, { method: 'PUT', body }),
     del: (path) => request(path, { method: 'DELETE' }),
+
+    // Télécharge un fichier protégé par authentification. Un simple lien <a href>
+    // ne peut pas transmettre le token Bearer (celui-ci ne vit que dans le JS),
+    // donc on récupère le fichier via fetch authentifié puis on déclenche
+    // l'enregistrement nous-mêmes.
+    download: async (path, nomFichier) => {
+      const blob = await request(path, { method: 'GET', responseType: 'blob' })
+      const url = window.URL.createObjectURL(blob)
+      const lien = document.createElement('a')
+      lien.href = url
+      lien.download = nomFichier || 'document'
+      document.body.appendChild(lien)
+      lien.click()
+      lien.remove()
+      window.URL.revokeObjectURL(url)
+    },
   }
 }

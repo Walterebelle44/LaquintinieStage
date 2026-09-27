@@ -53,6 +53,14 @@ const traiterDocument = async (doc, statut) => {
   await charger()
 }
 
+const telecharger = async (doc) => {
+  try {
+    await api.download(`/documents/${doc.id}/telecharger`, doc.titre)
+  } catch {
+    alert('Le téléchargement a échoué.')
+  }
+}
+
 // ------- Rendez-vous -------
 const modaleRdvOuverte = ref(false)
 const rdvForm = reactive({ titre: '', description: '', date_heure: '', lieu: '' })
@@ -205,7 +213,7 @@ const formaterDateHeure = (d) => d ? new Date(d).toLocaleString('fr-FR', { dateS
           </div>
           <div class="flex items-center gap-2">
             <StatutBadge :statut="d.statut" />
-            <a :href="`${useRuntimeConfig().public.apiBase}/documents/${d.id}/telecharger`" target="_blank" class="text-xs px-2.5 py-1.5 rounded-md text-brand-700 bg-brand-50 hover:bg-brand-100">Télécharger</a>
+            <button class="text-xs px-2.5 py-1.5 rounded-md text-brand-700 bg-brand-50 hover:bg-brand-100" @click="telecharger(d)">Télécharger</button>
             <template v-if="d.statut === 'en_attente'">
               <button class="text-xs px-2.5 py-1.5 rounded-md text-emerald-700 bg-emerald-50 hover:bg-emerald-100" @click="traiterDocument(d, 'valide')">Valider</button>
               <button class="text-xs px-2.5 py-1.5 rounded-md text-red-600 bg-red-50 hover:bg-red-100" @click="traiterDocument(d, 'rejete')">Rejeter</button>
