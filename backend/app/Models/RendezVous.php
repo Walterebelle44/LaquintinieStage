@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class RendezVous extends Model
 {
+    protected $table = 'rendez_vous'; // force le vrai nom de table
+    
     const STATUT_PLANIFIE = 'planifie';
     const STATUT_TERMINE = 'termine';
     const STATUT_ANNULE = 'annule';
