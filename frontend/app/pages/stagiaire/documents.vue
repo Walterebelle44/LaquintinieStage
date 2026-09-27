@@ -2,10 +2,9 @@
 definePageMeta({ layout: 'app' })
 
 const api = useApi()
-const authStore = useAuthStore()
 const donnees = ref(null)
 const chargement = ref(true)
-const stagiaireId = ref(null)
+const erreurChargement = ref('')
 
 const modaleOuverte = ref(false)
 const enregistrement = ref(false)
@@ -14,9 +13,11 @@ const formulaire = reactive({ type: 'rapport', titre: '', fichier: null })
 
 const charger = async () => {
   chargement.value = true
+  erreurChargement.value = ''
   try {
     donnees.value = await api.get('/mon-espace/feuille-de-route')
-    stagiaireId.value = donnees.value.id
+  } catch (e) {
+    erreurChargement.value = e?.data?.message || "Impossible de charger vos documents pour le moment."
   } finally {
     chargement.value = false
   }
@@ -45,11 +46,11 @@ const deposer = async () => {
     fd.append('type', formulaire.type)
     fd.append('titre', formulaire.titre)
     fd.append('fichier', formulaire.fichier)
-    await api.post(`/stagiaires/${stagiaireId.value}/documents`, fd)
+    await api.post('/mon-espace/documents', fd)
     modaleOuverte.value = false
     await charger()
   } catch (e) {
-    erreur.value = e?.data?.message || 'Erreur lors du dépôt du document.'
+    erreur.value = e?.data?.message || Object.values(e?.data?.errors || {})[0]?.[0] || 'Erreur lors du dépôt du document.'
   } finally {
     enregistrement.value = false
   }
@@ -66,7 +67,12 @@ const deposer = async () => {
 
     <div v-if="chargement" class="text-slate-400 text-sm">Chargement…</div>
 
-    <div v-else class="space-y-3">
+    <div v-else-if="erreurChargement" class="card p-6 text-center text-sm">
+      <p class="text-red-600">{{ erreurChargement }}</p>
+      <button class="btn-secondary mt-3" @click="charger">Réessayer</button>
+    </div>
+
+    <div v-else-if="donnees" class="space-y-3">
       <div v-if="!donnees.documents?.length" class="card p-8 text-center text-slate-400 text-sm">
         Vous n'avez déposé aucun document pour le moment.
       </div>
