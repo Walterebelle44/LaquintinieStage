@@ -13,13 +13,6 @@ use App\Http\Controllers\Api\RendezVousController;
 use App\Http\Controllers\Api\StagiaireController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API - Gestion des stagiaires - Hôpital Laquintinie de Douala
-|--------------------------------------------------------------------------
-| Rôles : admin (accès total) | encadrant (ses stagiaires) | stagiaire (son espace)
-*/
-
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
