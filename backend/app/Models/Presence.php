@@ -19,6 +19,15 @@ class Presence extends Model
         return ['date' => 'date'];
     }
 
+    // Par défaut, Laravel sérialise un cast 'date' en JSON comme un datetime ISO complet
+    // (ex: "2026-09-27T00:00:00.000000Z"), ce qui empêche le frontend de comparer p.date
+    // à une simple chaîne "AAAA-MM-JJ" pour détecter le pointage du jour. On force donc
+    // un format Y-m-d pur.
+    protected function serializeDate(\DateTimeInterface $date): string
+    {
+        return $date->format('Y-m-d');
+    }
+
     public function stagiaire()
     {
         return $this->belongsTo(Stagiaire::class);

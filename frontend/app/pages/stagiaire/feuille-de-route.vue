@@ -9,7 +9,9 @@ const erreurChargement = ref('')
 const modaleAbsenceOuverte = ref(false)
 const absenceForm = reactive({ date_debut: '', date_fin: '', motif: '' })
 const enregistrement = ref(false)
+const erreurAbsence = ref('')
 const pointageEnCours = ref(false)
+const erreurPointage = ref('')
 
 const charger = async () => {
   chargement.value = true
@@ -24,26 +26,41 @@ const charger = async () => {
 }
 onMounted(charger)
 
+// Date locale au format AAAA-MM-JJ (toISOString() donnerait la date en UTC,
+// ce qui peut décaler le jour selon l'heure et le fuseau du navigateur).
+const dateLocale = (d = new Date()) => {
+  const annee = d.getFullYear()
+  const mois = String(d.getMonth() + 1).padStart(2, '0')
+  const jour = String(d.getDate()).padStart(2, '0')
+  return `${annee}-${mois}-${jour}`
+}
+
 const presenceAujourdhui = computed(() => {
-  const auj = new Date().toISOString().slice(0, 10)
+  const auj = dateLocale()
   return donnees.value?.presences?.find((p) => p.date === auj)
 })
 
 const pointerArrivee = async () => {
+  erreurPointage.value = ''
   pointageEnCours.value = true
   try {
     await api.post('/mon-espace/pointage/arrivee')
     await charger()
+  } catch (e) {
+    erreurPointage.value = e?.data?.message || "Le pointage d'arrivée a échoué. Réessayez."
   } finally {
     pointageEnCours.value = false
   }
 }
 
 const pointerDepart = async () => {
+  erreurPointage.value = ''
   pointageEnCours.value = true
   try {
     await api.post('/mon-espace/pointage/depart')
     await charger()
+  } catch (e) {
+    erreurPointage.value = e?.data?.message || "Le pointage de départ a échoué. Réessayez."
   } finally {
     pointageEnCours.value = false
   }
@@ -51,15 +68,19 @@ const pointerDepart = async () => {
 
 const ouvrirDemandeAbsence = () => {
   Object.assign(absenceForm, { date_debut: '', date_fin: '', motif: '' })
+  erreurAbsence.value = ''
   modaleAbsenceOuverte.value = true
 }
 
 const soumettreAbsence = async () => {
+  erreurAbsence.value = ''
   enregistrement.value = true
   try {
     await api.post('/mon-espace/absences', absenceForm)
     modaleAbsenceOuverte.value = false
     await charger()
+  } catch (e) {
+    erreurAbsence.value = e?.data?.message || Object.values(e?.data?.errors || {})[0]?.[0] || "L'envoi de la demande a échoué. Réessayez."
   } finally {
     enregistrement.value = false
   }
@@ -99,6 +120,7 @@ const formaterDateHeure = (d) => d ? new Date(d).toLocaleString('fr-FR', { dateS
           <span v-else class="badge bg-emerald-50 text-emerald-700">Journée complète</span>
         </div>
       </div>
+      <p v-if="erreurPointage" class="text-sm text-red-600 -mt-4">{{ erreurPointage }}</p>
 
       <!-- Infos stage -->
       <div class="grid md:grid-cols-2 gap-4">
@@ -168,6 +190,7 @@ const formaterDateHeure = (d) => d ? new Date(d).toLocaleString('fr-FR', { dateS
 
     <ModaleBase :ouvert="modaleAbsenceOuverte" titre="Demande d'absence" @fermer="modaleAbsenceOuverte = false">
       <form class="space-y-4" @submit.prevent="soumettreAbsence">
+        <div v-if="erreurAbsence" class="px-3 py-2 rounded-lg bg-red-50 text-red-600 text-sm">{{ erreurAbsence }}</div>
         <div class="grid grid-cols-2 gap-3">
           <div><label class="block text-sm font-medium text-slate-700 mb-1.5">Du</label><input v-model="absenceForm.date_debut" type="date" required class="input-field" /></div>
           <div><label class="block text-sm font-medium text-slate-700 mb-1.5">Au</label><input v-model="absenceForm.date_fin" type="date" required class="input-field" /></div>
