@@ -4,6 +4,7 @@ definePageMeta({ layout: 'app' })
 const api = useApi()
 const donnees = ref(null)
 const chargement = ref(true)
+const erreurChargement = ref('')
 
 const modaleAbsenceOuverte = ref(false)
 const absenceForm = reactive({ date_debut: '', date_fin: '', motif: '' })
@@ -12,8 +13,11 @@ const pointageEnCours = ref(false)
 
 const charger = async () => {
   chargement.value = true
+  erreurChargement.value = ''
   try {
     donnees.value = await api.get('/mon-espace/feuille-de-route')
+  } catch (e) {
+    erreurChargement.value = e?.data?.message || "Impossible de charger votre feuille de route pour le moment."
   } finally {
     chargement.value = false
   }
@@ -70,6 +74,11 @@ const formaterDateHeure = (d) => d ? new Date(d).toLocaleString('fr-FR', { dateS
     <AppHeader titre="Ma feuille de route" />
 
     <div v-if="chargement" class="text-slate-400 text-sm mt-6">Chargement…</div>
+
+    <div v-else-if="erreurChargement" class="card p-6 text-center text-sm mt-2">
+      <p class="text-red-600">{{ erreurChargement }}</p>
+      <button class="btn-secondary mt-3" @click="charger">Réessayer</button>
+    </div>
 
     <div v-else-if="donnees" class="mt-2 space-y-6">
       <!-- Pointage du jour -->

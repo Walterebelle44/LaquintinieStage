@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\VerifieAccesStagiaire;
 use App\Http\Controllers\Controller;
 use App\Models\Absence;
 use App\Models\Stagiaire;
@@ -10,8 +11,12 @@ use Illuminate\Validation\Rule;
 
 class AbsenceController extends Controller
 {
+    use VerifieAccesStagiaire;
+
     public function index(Request $request, Stagiaire $stagiaire)
     {
+        $this->verifierAccesStagiaire($request, $stagiaire);
+
         return response()->json($stagiaire->absences()->latest()->get());
     }
 
@@ -38,6 +43,8 @@ class AbsenceController extends Controller
     // Approbation / rejet par l'encadrant ou l'admin
     public function traiter(Request $request, Absence $absence)
     {
+        $this->verifierAccesStagiaire($request, $absence->stagiaire);
+
         $data = $request->validate([
             'statut' => ['required', Rule::in([Absence::STATUT_APPROUVEE, Absence::STATUT_REJETEE])],
             'commentaire_traitement' => 'nullable|string|max:255',

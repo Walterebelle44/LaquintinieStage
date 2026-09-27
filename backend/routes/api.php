@@ -34,6 +34,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/mon-espace/pointage/arrivee', [PresenceController::class, 'pointerArrivee']);
         Route::post('/mon-espace/pointage/depart', [PresenceController::class, 'pointerDepart']);
         Route::post('/mon-espace/absences', [AbsenceController::class, 'store']);
+        Route::post('/mon-espace/documents', [DocumentController::class, 'deposerMonDocument']);
     });
 
     // ---------- Espace commun admin + encadrant ----------

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\VerifieAccesStagiaire;
 use App\Http\Controllers\Controller;
 use App\Models\Presence;
 use App\Models\Stagiaire;
@@ -10,8 +11,12 @@ use Illuminate\Validation\Rule;
 
 class PresenceController extends Controller
 {
+    use VerifieAccesStagiaire;
+
     public function index(Request $request, Stagiaire $stagiaire)
     {
+        $this->verifierAccesStagiaire($request, $stagiaire);
+
         return response()->json(
             $stagiaire->presences()->orderByDesc('date')->paginate($request->integer('per_page', 31))
         );
@@ -57,6 +62,8 @@ class PresenceController extends Controller
     // Correction manuelle par un encadrant/admin
     public function update(Request $request, Stagiaire $stagiaire, Presence $presence)
     {
+        $this->verifierAccesStagiaire($request, $stagiaire);
+
         $data = $request->validate([
             'heure_arrivee' => 'nullable|date_format:H:i:s',
             'heure_depart' => 'nullable|date_format:H:i:s',
